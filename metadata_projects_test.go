@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/leifwind-io/leifwind-go"
+	client "github.com/leifwind-io/leifwind-go"
 )
 
 func TestDeleteProjectAndDryRun(t *testing.T) {

@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/leifwind-io/leifwind-go"
+	client "github.com/leifwind-io/leifwind-go"
 )
 
 // countingTransport instruments OUR client's HTTP layer in-process: it counts

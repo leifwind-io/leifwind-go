@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/leifwind-io/leifwind-go"
+	client "github.com/leifwind-io/leifwind-go"
 )
 
 // proxiedClient returns a client whose traffic crosses toxiproxy, plus the

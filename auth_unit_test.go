@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/leifwind-io/leifwind-go"
+	client "github.com/leifwind-io/leifwind-go"
 )
 
 func TestTokenEndpointEmptyAccessTokenIsErrorAndNotCached(t *testing.T) {
