@@ -71,7 +71,8 @@ type ccTokenSource struct {
 //
 //nolint:revive // name is the plan-wide public API contract (task brief); renaming would break it
 func ClientCredentials(issuer, clientID, clientSecret string, opts ...CredentialOption) TokenSource {
-	s := ccSettings{now: time.Now, hc: http.DefaultClient}
+	// Bounded: Token holds c.mu across the request (http.DefaultClient never times out).
+	s := ccSettings{now: time.Now, hc: &http.Client{Timeout: 30 * time.Second}}
 	for _, o := range opts {
 		o(&s)
 	}
