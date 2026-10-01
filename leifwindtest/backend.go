@@ -39,7 +39,8 @@ func (s *Stack) startBackend(withToxiproxy bool) error {
 			Networks:       []string{s.net.Name},
 			NetworkAliases: map[string][]string{s.net.Name: {"backend"}},
 			ExposedPorts:   []string{"8000/tcp"},
-			Env: map[string]string{
+			// The throwaway credentials of the stack's own Postgres container.
+			Env: map[string]string{ //nolint:gosec // G101: test-only, never a real secret
 				"POSTGRES_URL":           "postgresql://leifwind:leifwind@backend-db:5432/leifwind",
 				"SERIALIZER_SECRET_KEY":  "test-secret",
 				"SERIALIZER_SALT":        "test-salt",
