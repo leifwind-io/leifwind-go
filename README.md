@@ -2,12 +2,11 @@
 
 Standalone client for the leifwind metadata API — no Terraform required.
 
-`github.com/leifwind-io/leifwind-go` is a
-first-class public deliverable in its own right: it is importable
-independently of the Terraform provider that lives alongside it in this
-repository, has **zero `terraform-plugin-*` dependencies**, and is tagged and
-released on its own `client/vX.Y.Z` stream so consumers can pin it without
-pulling in any Terraform tooling.
+`github.com/leifwind-io/leifwind-go` is a first-class public deliverable in
+its own right: it is importable independently of the Terraform provider that
+is built on it, has **zero `terraform-plugin-*` dependencies**, and is
+versioned on its own so consumers can pin it without pulling in any Terraform
+tooling.
 
 It mirrors the semantics of the backend's Python client: upsert-style POSTs
 resolved by `object_id` or natural `unique_key`, cursor pagination via Go
@@ -25,27 +24,27 @@ go get github.com/leifwind-io/leifwind-go
 package main
 
 import (
-	"context"
-	"fmt"
-	"log"
+    "context"
+    "fmt"
+    "log"
 
-	"github.com/leifwind-io/leifwind-go"
+    client "github.com/leifwind-io/leifwind-go"
 )
 
 func main() {
-	c, err := client.New("https://api.leifwind.example",
-		client.WithTokenSource(client.ClientCredentials(
-			"https://auth.leifwind.example", "client-id", "client-secret",
-			client.WithAudience("326102453042806786"))))
-	if err != nil {
-		log.Fatal(err)
-	}
-	for p, err := range c.Metadata.IterProjects(context.Background(), client.ListOpts{}) {
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(p.Name, p.ObjectID)
-	}
+    c, err := client.New("https://api.leifwind.example",
+        client.WithTokenSource(client.ClientCredentials(
+            "https://auth.leifwind.example", "client-id", "client-secret",
+            client.WithAudience("326102453042806786"))))
+    if err != nil {
+        log.Fatal(err)
+    }
+    for p, err := range c.Metadata.IterProjects(context.Background(), client.ListOpts{}) {
+        if err != nil {
+            log.Fatal(err)
+        }
+        fmt.Println(p.Name, p.ObjectID)
+    }
 }
 ```
 
@@ -53,7 +52,8 @@ func main() {
 being a static/delegated bearer token (`client.StaticToken` or handing a
 `TokenSource` from your own auth flow). Use whichever matches how your
 service acquires credentials; this mirrors the two auth paths the Terraform
-provider itself exposes (see the root [`README.md`](../README.md)).
+provider itself exposes (see its
+[`README.md`](../terraform-provider-leifwind/README.md)).
 
 ### Known backend quirks to be aware of
 
@@ -69,7 +69,7 @@ provider itself exposes (see the root [`README.md`](../README.md)).
 
 ## Testing your own code against a real stack
 
-The `leifwindtest` package (`client/leifwindtest`) is an exported test
+The `leifwindtest` package (`leifwindtest/`) is an exported test
 fixture, usable by any consumer of this client — not just this repository's
 own test suite. It boots ZITADEL, the leifwind backend, and PostgreSQL in
 Docker via testcontainers, and mints per-organization tokens for you:
@@ -78,15 +78,15 @@ Docker via testcontainers, and mints per-organization tokens for you:
 var sharedStack *leifwindtest.Stack
 
 func TestMain(m *testing.M) {
-	var cleanup func()
-	var err error
-	sharedStack, cleanup, err = leifwindtest.StartMain()
-	if err != nil {
-		log.Fatal(err)
-	}
-	code := m.Run()
-	cleanup() // NOT deferred: os.Exit below skips deferred calls
-	os.Exit(code)
+    var cleanup func()
+    var err error
+    sharedStack, cleanup, err = leifwindtest.StartMain()
+    if err != nil {
+        log.Fatal(err)
+    }
+    code := m.Run()
+    cleanup() // NOT deferred: os.Exit below skips deferred calls
+    os.Exit(code)
 }
 ```
 
