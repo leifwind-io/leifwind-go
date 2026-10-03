@@ -4,6 +4,7 @@ package leifwindtest
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/testcontainers/testcontainers-go"
@@ -12,6 +13,7 @@ import (
 
 func (s *Stack) startBackend(withToxiproxy bool) error {
 	ctx := s.ctx
+	image := backendImage(os.Getenv)
 
 	bdb, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
@@ -35,7 +37,7 @@ func (s *Stack) startBackend(withToxiproxy bool) error {
 
 	backend, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
-			Image:          BackendImage,
+			Image:          image,
 			Networks:       []string{s.net.Name},
 			NetworkAliases: map[string][]string{s.net.Name: {"backend"}},
 			ExposedPorts:   []string{"8000/tcp"},
@@ -55,7 +57,7 @@ func (s *Stack) startBackend(withToxiproxy bool) error {
 		Started: true,
 	})
 	if err != nil {
-		return fmt.Errorf("backend (image %s — check registry login / internal allowlist): %w", BackendImage, err)
+		return fmt.Errorf("backend (image %s — check registry login / internal allowlist): %w", image, err)
 	}
 	s.deferCleanup(terminate(ctx, backend))
 

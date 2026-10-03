@@ -17,9 +17,19 @@ import (
 	"github.com/testcontainers/testcontainers-go/network"
 )
 
-// BackendImage is the backend under test.
+// BackendImage is the backend under test unless LEIFWIND_BACKEND_IMAGE names
+// another (CI tests the image its own pipeline built).
 // TODO(internal): pin semver once the backend cuts a release.
 const BackendImage = "registry.example.invalid/leifwind-stream-backend:edge"
+
+// backendImage is the image the stack starts: LEIFWIND_BACKEND_IMAGE when set,
+// else BackendImage.
+func backendImage(getenv func(string) string) string {
+	if image := getenv("LEIFWIND_BACKEND_IMAGE"); image != "" {
+		return image
+	}
+	return BackendImage
+}
 
 const (
 	zitadelImage  = "ghcr.io/zitadel/zitadel:v4.15.3"
