@@ -58,10 +58,7 @@ func TestClientCredentialsFetchesCachesAndRefreshes(t *testing.T) {
 	// perf: reuse the package-shared stack from TestMain (client_test.go)
 	// instead of booting a dedicated one; the org still isolates this test.
 	// The shared stack's toxiproxy is unused here — we hit s.Issuer directly.
-	if stackErr != nil {
-		t.Fatalf("stack: %v", stackErr)
-	}
-	s := sharedStack
+	s := stack(t)
 	orgMu.Lock()
 	org := s.NewOrg(t)
 	orgMu.Unlock()

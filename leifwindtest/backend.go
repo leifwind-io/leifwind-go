@@ -4,7 +4,6 @@ package leifwindtest
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/testcontainers/testcontainers-go"
@@ -13,7 +12,7 @@ import (
 
 func (s *Stack) startBackend(withToxiproxy bool) error {
 	ctx := s.ctx
-	image := backendImage(os.Getenv)
+	image := s.image
 
 	bdb, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{

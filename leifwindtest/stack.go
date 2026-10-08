@@ -8,6 +8,7 @@ package leifwindtest
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -16,20 +17,6 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/network"
 )
-
-// BackendImage is the backend under test unless LEIFWIND_BACKEND_IMAGE names
-// another (CI tests the image its own pipeline built).
-// TODO(internal): pin semver once the backend cuts a release.
-const BackendImage = "registry.example.invalid/leifwind-stream-backend:edge"
-
-// backendImage is the image the stack starts: LEIFWIND_BACKEND_IMAGE when set,
-// else BackendImage.
-func backendImage(getenv func(string) string) string {
-	if image := getenv("LEIFWIND_BACKEND_IMAGE"); image != "" {
-		return image
-	}
-	return BackendImage
-}
 
 const (
 	zitadelImage  = "ghcr.io/zitadel/zitadel:v4.15.3"
@@ -61,6 +48,7 @@ type Stack struct {
 	ProxiedBackendURL string // set by WithToxiproxy
 
 	ctx          context.Context
+	image        string // the backend image, LEIFWIND_BACKEND_IMAGE
 	mgmtPAT      string
 	defaultOrgID string
 	net          *testcontainers.DockerNetwork
@@ -80,25 +68,34 @@ type Stack struct {
 	exchangeAppClientSecret string
 }
 
-// Start boots the stack and registers cleanup on t.
+// Start boots the stack and registers cleanup on t. It skips the test when
+// there is no backend to start (ErrNoBackend, see Require).
 func Start(t testing.TB, opts ...StackOption) *Stack {
 	t.Helper()
 	s, cleanup, err := StartMain(opts...)
-	if err != nil {
-		t.Fatalf("leifwindtest: %v", err)
-	}
+	Require(t, err)
 	t.Cleanup(cleanup)
 	return s
 }
 
-// StartMain is the TestMain-friendly variant (no testing.TB required).
+// StartMain is the TestMain-friendly variant (no testing.TB required). The
+// backend is the image LEIFWIND_BACKEND_IMAGE names; without it, without a
+// Docker daemon, or when the image cannot be pulled, StartMain returns
+// ErrNoBackend before it starts anything.
 func StartMain(opts ...StackOption) (*Stack, func(), error) {
 	var settings stackSettings
 	for _, o := range opts {
 		o(&settings)
 	}
 	ctx := context.Background()
-	s := &Stack{ctx: ctx}
+	image, err := backendImage(os.Getenv)
+	if err != nil {
+		return nil, nil, err
+	}
+	if err := checkBackend(ctx, image); err != nil {
+		return nil, nil, err
+	}
+	s := &Stack{ctx: ctx, image: image}
 
 	net, err := network.New(ctx)
 	if err != nil {

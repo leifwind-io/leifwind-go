@@ -33,17 +33,23 @@ func TestMain(m *testing.M) {
 
 var orgMu sync.Mutex
 
+// stack is the package-shared stack. Without a backend it skips t, and it
+// fails t when the boot failed (leifwindtest.Require).
+func stack(t *testing.T) *leifwindtest.Stack {
+	t.Helper()
+	leifwindtest.Require(t, stackErr)
+	return sharedStack
+}
+
 // newTestClient returns a client bound to a FRESH org (tenant isolation).
 func newTestClient(t *testing.T) (*client.Client, *leifwindtest.Org) {
 	t.Helper()
-	if stackErr != nil {
-		t.Fatalf("stack: %v", stackErr)
-	}
+	s := stack(t)
 	orgMu.Lock()
-	org := sharedStack.NewOrg(t)
+	org := s.NewOrg(t)
 	orgMu.Unlock()
-	c, err := client.New(sharedStack.BackendURL,
-		client.WithTokenSource(org.TokenSource(sharedStack)))
+	c, err := client.New(s.BackendURL,
+		client.WithTokenSource(org.TokenSource(s)))
 	if err != nil {
 		t.Fatal(err)
 	}

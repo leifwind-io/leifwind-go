@@ -75,18 +75,26 @@ own test suite. It boots ZITADEL, the leifwind backend, and PostgreSQL in
 Docker via testcontainers, and mints per-organization tokens for you:
 
 ```go
-var sharedStack *leifwindtest.Stack
+var (
+    sharedStack *leifwindtest.Stack
+    stackErr    error
+)
 
 func TestMain(m *testing.M) {
     var cleanup func()
-    var err error
-    sharedStack, cleanup, err = leifwindtest.StartMain()
-    if err != nil {
-        log.Fatal(err)
-    }
+    sharedStack, cleanup, stackErr = leifwindtest.StartMain()
     code := m.Run()
-    cleanup() // NOT deferred: os.Exit below skips deferred calls
+    if cleanup != nil {
+        cleanup() // NOT deferred: os.Exit below skips deferred calls
+    }
     os.Exit(code)
+}
+
+func TestSomething(t *testing.T) {
+    // Skips without a backend (ErrNoBackend), fails on any other boot error.
+    leifwindtest.Require(t, stackErr)
+    org := sharedStack.NewOrg(t)
+    // ...
 }
 ```
 
@@ -96,6 +104,14 @@ machine-user token (`org.TokenSource(sharedStack)` plugs straight into
 test and can run with `t.Parallel()` against a single shared stack rather
 than paying the ~1–2 minute stack-boot cost per test.
 
-Requires Docker locally (and `docker login registry.example.invalid` once, with a
-`read_registry` personal access token, to pull the private backend test
-image).
+The stack needs Docker and a backend image: `LEIFWIND_BACKEND_IMAGE` names
+it. The backend is not public yet, so without that variable, without a Docker
+daemon, or when the image cannot be pulled (a bounded check), the stack
+returns `leifwindtest.ErrNoBackend` and `Start`, `Require` and this package's
+own integration tests skip with "backend image not accessible; integration
+tests run in the private upstream CI". Set `LEIFWIND_REQUIRE_BACKEND=1` to
+make that a failure instead. The unit tests run anywhere:
+
+```bash
+go test ./...
+```

@@ -22,15 +22,13 @@ var (
 )
 
 // sharedStack returns the package-shared stack, booting it on first use; it
-// fails the test if the boot failed.
+// skips the test without a backend and fails it if the boot failed (Require).
 func sharedStack(t testing.TB) *Stack {
 	t.Helper()
 	mainOnce.Do(func() {
 		mainStack, mainCleanup, mainErr = StartMain()
 	})
-	if mainErr != nil {
-		t.Fatalf("shared stack boot: %v", mainErr)
-	}
+	Require(t, mainErr)
 	return mainStack
 }
 

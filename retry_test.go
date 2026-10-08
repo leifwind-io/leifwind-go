@@ -16,12 +16,13 @@ import (
 // counting transport for attempt assertions.
 func proxiedClient(t *testing.T, rc client.RetryConfig) (*client.Client, *countingTransport) {
 	t.Helper()
+	s := stack(t)
 	orgMu.Lock()
-	org := sharedStack.NewOrg(t)
+	org := s.NewOrg(t)
 	orgMu.Unlock()
 	ct := &countingTransport{next: http.DefaultTransport}
-	c, err := client.New(sharedStack.ProxiedBackendURL,
-		client.WithTokenSource(org.TokenSource(sharedStack)),
+	c, err := client.New(s.ProxiedBackendURL,
+		client.WithTokenSource(org.TokenSource(s)),
 		client.WithHTTPClient(&http.Client{Transport: ct, Timeout: 30 * time.Second}),
 		client.WithRetry(rc))
 	if err != nil {
@@ -31,7 +32,7 @@ func proxiedClient(t *testing.T, rc client.RetryConfig) (*client.Client, *counti
 }
 
 func TestRetriesTransportErrorThenSucceeds(t *testing.T) {
-	proxy := sharedStack.Toxiproxy() // shared proxy: no t.Parallel in this file
+	proxy := stack(t).Toxiproxy() // shared proxy: no t.Parallel in this file
 	c, ct := proxiedClient(t, client.RetryConfig{MaxAttempts: 5, MinBackoff: 300 * time.Millisecond, MaxBackoff: time.Second})
 
 	if err := proxy.Disable(); err != nil {
@@ -68,7 +69,7 @@ func TestNoRetryOn4xx(t *testing.T) {
 }
 
 func TestContextCancelAbortsBackoff(t *testing.T) {
-	proxy := sharedStack.Toxiproxy()
+	proxy := stack(t).Toxiproxy()
 	c, _ := proxiedClient(t, client.RetryConfig{MaxAttempts: 10, MinBackoff: 2 * time.Second, MaxBackoff: 8 * time.Second})
 	if err := proxy.Disable(); err != nil {
 		t.Fatal(err)
@@ -88,7 +89,7 @@ func TestContextCancelAbortsBackoff(t *testing.T) {
 }
 
 func TestDeleteRetryTolerates404(t *testing.T) {
-	proxy := sharedStack.Toxiproxy()
+	proxy := stack(t).Toxiproxy()
 	// MaxAttempts 10: the toxic below is lifted on a wall-clock timer while
 	// full-jitter backoff has no lower bound, so with few attempts the whole
 	// retry budget can fit inside the toxic window and every attempt fails
