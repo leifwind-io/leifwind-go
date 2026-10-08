@@ -6,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/moby/moby/client"
@@ -30,10 +32,21 @@ func TestBackendImageFromTheEnvironment(t *testing.T) {
 }
 
 func TestAnUnreachableDaemonMeansNoBackend(t *testing.T) {
-	t.Setenv("DOCKER_HOST", "tcp://127.0.0.1:1")
-	err := checkBackend(context.Background(), "example.invalid/backend:x")
-	if !errors.Is(err, ErrNoBackend) {
-		t.Fatalf("checkBackend() = %v, want ErrNoBackend", err)
+	// testcontainers resolves the Docker host once per process (a sync.Once).
+	// A dead DOCKER_HOST set in this process would stay for every later test of
+	// the package wherever DOCKER_HOST is the only way to the daemon, as in CI,
+	// so the check runs in a child process of its own.
+	if os.Getenv("LEIFWINDTEST_DEAD_DAEMON") == "1" {
+		err := checkBackend(context.Background(), "example.invalid/backend:x")
+		if !errors.Is(err, ErrNoBackend) {
+			t.Fatalf("checkBackend() = %v, want ErrNoBackend", err)
+		}
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=^TestAnUnreachableDaemonMeansNoBackend$", "-test.count=1")
+	cmd.Env = append(os.Environ(), "LEIFWINDTEST_DEAD_DAEMON=1", "DOCKER_HOST=tcp://127.0.0.1:1")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("the check in a child process failed: %v\n%s", err, out)
 	}
 }
 
