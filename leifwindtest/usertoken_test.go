@@ -33,7 +33,7 @@ func TestForgedTokenHasValidShape(t *testing.T) {
 	}
 }
 
-// TestUserTokenTwiceSameOrg: UserToken must be idempotent per Org (internal).
+// TestUserTokenTwiceSameOrg: UserToken must be idempotent per Org.
 // The second call re-grants ORG_END_USER_IMPERSONATOR to the same machine
 // user; ZITADEL answers 409 AlreadyExists, which must be tolerated.
 func TestUserTokenTwiceSameOrg(t *testing.T) {

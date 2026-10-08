@@ -57,7 +57,7 @@ func (s *Stack) startBackend(withToxiproxy bool) error {
 		Started: true,
 	})
 	if err != nil {
-		return fmt.Errorf("backend (image %s — check registry login / internal allowlist): %w", image, err)
+		return fmt.Errorf("backend (image %s — check the registry login): %w", image, err)
 	}
 	s.deferCleanup(terminate(ctx, backend))
 

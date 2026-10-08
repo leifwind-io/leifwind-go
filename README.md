@@ -58,7 +58,7 @@ provider itself exposes (see its
 ### Known backend quirks to be aware of
 
 - **Project names are globally unique across all tenants**, not just within
-  a single organization (internal) — a consequence of the schema-per-project
+  a single organization — a consequence of the schema-per-project
   design (each project maps to its own Postgres schema, and schema names are
   database-global). Namespace names accordingly if you create projects
   programmatically.

@@ -73,7 +73,7 @@ type Stack struct {
 	// + token-exchange OIDC app). Per-Stack, not package-level: each Stack is
 	// its own ZITADEL instance/project. A mutex + flag instead of sync.Once:
 	// a FAILED setup must not poison the Stack — the next UserToken call
-	// retries (internal).
+	// retries.
 	exchangeMu              sync.Mutex
 	exchangeReady           bool
 	exchangeAppClientID     string

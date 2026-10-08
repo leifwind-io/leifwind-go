@@ -15,7 +15,7 @@ func TestListEntityFragments(t *testing.T) {
 	t.Parallel()
 	c, _ := newTestClient(t)
 	ctx := context.Background()
-	// Project names are globally unique across tenants (internal); use a
+	// Project names are globally unique across tenants; use a
 	// per-test-unique name to avoid cross-test 409s.
 	p, err := c.Metadata.UpsertProject(ctx, client.MetadataProject{Name: "frag_proj_" + uuid.NewString()[:8]})
 	if err != nil {
@@ -27,7 +27,7 @@ func TestListEntityFragments(t *testing.T) {
 	}
 	// A FRAGMENT column syncs against the entity's KEY column(s) server-side;
 	// adding a FRAGMENT field before any KEY field exists 500s on
-	// backend:edge (same sync_entity_schema class of bug as internal), so
+	// backend:edge (the sync_entity_schema KEY-before-FRAGMENT order), so
 	// create a KEY field first.
 	if _, err := c.Metadata.UpsertField(ctx, client.MetadataField{
 		ProjectID: *p.ObjectID, EntityID: *e.ObjectID, Name: "id",

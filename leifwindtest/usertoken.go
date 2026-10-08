@@ -52,7 +52,7 @@ import (
 //
 // UserToken is safe to call any number of times for the same Org: each call
 // mints a fresh human user, and ZITADEL's 409 AlreadyExists on the
-// impersonator re-grant is tolerated (internal).
+// impersonator re-grant is tolerated.
 func (s *Stack) UserToken(t testing.TB, org *Org) string {
 	t.Helper()
 
@@ -76,7 +76,7 @@ func (s *Stack) UserToken(t testing.TB, org *Org) string {
 		t.Fatalf("create human user: %v", err)
 	}
 
-	// Idempotency (internal): a second UserToken on the same Org re-grants
+	// Idempotency: a second UserToken on the same Org re-grants
 	// ORG_END_USER_IMPERSONATOR to the same machine user and ZITADEL answers
 	// 409 AlreadyExists — tolerate exactly that; anything else still fails.
 	// Handled here at the grant site: mgmtDo's strict ≥400 semantics are
@@ -119,7 +119,7 @@ func (s *Stack) UserToken(t testing.TB, org *Org) string {
 
 // ensureTokenExchange runs setupTokenExchange once per Stack under
 // exchangeMu, leaving exchangeReady false on failure so the next call
-// retries (internal). The deferred unlock keeps a panicking setup from
+// retries. The deferred unlock keeps a panicking setup from
 // deadlocking every later UserToken call.
 func (s *Stack) ensureTokenExchange() error {
 	s.exchangeMu.Lock()

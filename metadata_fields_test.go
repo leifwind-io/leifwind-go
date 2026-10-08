@@ -16,7 +16,7 @@ func fieldFixture(t *testing.T) (*client.Client, uuid.UUID, uuid.UUID) {
 	c, _ := newTestClient(t)
 	ctx := context.Background()
 	// Project names are globally unique across tenants (schema-per-project ⇒
-	// DB-global Postgres schema names; by design, internal), so use a per-test
+	// DB-global Postgres schema names; by design), so use a per-test
 	// unique name to avoid cross-test 409s.
 	p, err := c.Metadata.UpsertProject(ctx, client.MetadataProject{Name: "fld_proj_" + uuid.NewString()[:8]})
 	if err != nil {
@@ -82,7 +82,7 @@ func TestFieldLifecycleKeyAndFragment(t *testing.T) {
 		t.Fatalf("list: %d, %v", len(page.Objects), err)
 	}
 
-	// The backend enforces KEY-before-FRAGMENT (internal): the entity's last KEY
+	// The backend enforces KEY-before-FRAGMENT: the entity's last KEY
 	// field can't be deleted while a FRAGMENT sibling exists. Add a second KEY
 	// field so the KEY delete below isn't the entity's last.
 	if _, err := c.Metadata.UpsertField(ctx, client.MetadataField{
@@ -94,7 +94,7 @@ func TestFieldLifecycleKeyAndFragment(t *testing.T) {
 	}
 
 	// Delete FRAGMENT before KEY: deleting the entity's last KEY field while a
-	// FRAGMENT sibling exists is rejected (422) by the backend (internal).
+	// FRAGMENT sibling exists is rejected (422) by the backend.
 	if err := c.Metadata.DeleteField(ctx, pid, eid, *frag.ObjectID); err != nil {
 		t.Fatal(err)
 	}
